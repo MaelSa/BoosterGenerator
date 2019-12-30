@@ -21,30 +21,31 @@ print(len(MtgSet))
 lenSet = len(MtgSet)
 
 def generateBooster():
+    MtgSetBooster = copy.copy(MtgSet)
     banned_subtypes = ['Forest', 'Mountain', 'Plains', 'Swamp', 'Island', 'Adventure']
     boosterList = []
     rarity_numbers = [0, 0, 0]
-    while rarity_numbers != [10, 3, 1]:
+    while rarity_numbers != [9, 4, 2]:
         ok_card = False
-        card = MtgSet[random.randint(0, len(MtgSet) - 1)]
+        card = MtgSetBooster[random.randint(0, len(MtgSetBooster) - 1)]
         if card.subtypes and card.subtypes[0] not in banned_subtypes:
             ok_card, rarity_numbers = okrarity(card, rarity_numbers)
         if ok_card:
             boosterList.append(card)
-            MtgSet.remove(card)
+            MtgSetBooster.remove(card)
     return boosterList
 
 
 def okrarity(card, rarity_numbers):
-    if (card.rarity == 'Rare' or card.rarity == 'Mythic') and rarity_numbers[2] == 0:
+    if (card.rarity == 'Rare' or card.rarity == 'Mythic') and rarity_numbers[2] < 2:
         rarity_numbers[2] += 1
         return True, rarity_numbers
 
-    elif card.rarity == 'Uncommon' and rarity_numbers[1] < 3:
+    elif card.rarity == 'Uncommon' and rarity_numbers[1] < 4:
         rarity_numbers[1] += 1
         return True, rarity_numbers
 
-    elif card.rarity == 'Common' and rarity_numbers[1] < 10:
+    elif card.rarity == 'Common' and rarity_numbers[1] < 9:
         rarity_numbers[0] += 1
         return True, rarity_numbers
 
@@ -52,52 +53,39 @@ def okrarity(card, rarity_numbers):
         return False, rarity_numbers
 
 
-def image_from_url(url):
-    rep = urllib.request.urlopen(url).read()
-    image = np.asarray(bytearray(rep), dtype="uint8")
-    image = cv2.imdecode(image, cv2.IMREAD_COLOR)
-    return image
-
-
-def transfo_url_to_image(Booster):
-    for card in Booster:
-        image = image_from_url(card.image_url)
-        imgpil = Image.fromarray(image)  # Transformation du tableau en image PIL
-        imgpil.save("images/" + card.number + ".jpg")
-
-
 def placement_images(card_numbers):
 
     pygame.init()
 
     # Ouverture de la fenêtre Pygame
-    fenetre = pygame.display.set_mode((640, 480))
+    fenetre = pygame.display.set_mode((2481, 3510))
     fenetre.fill((255,255,255))
     # Chargement et collage du fond
 
-    i, j = 0, 0
-    print(card_numbers)
-    for number in card_numbers:
-        print("in for loop")
-        visual_pic = pygame.image.load(str(number) + '.jpg').convert()
-        print(str(number)+'.jpg')
-        fenetre.blit(visual_pic, (i % 3 * 100, j % 3 * 300))
+    print(len(card_numbers))
+    for sheet in range(10):
+        for c in range(9):
+            visual_pic = pygame.image.load('images/' + str(card_numbers[0]) + '.jpg').convert()
+            card_numbers.remove(card_numbers[0])
+            visual_pic = pygame.transform.scale(visual_pic, (744, 1040))
+            fenetre.blit(visual_pic, ((c%3)*784 + 50, (c//3)*1070 + 50))
 
-        # Rafraîchissement de l'écran
-        pygame.display.flip()
+            # Rafraîchissement de l'écran
+            pygame.display.flip()
 
         # BOUCLE INFINIE
+        pygame.image.save(fenetre, f"screenshot{sheet}.jpg")
     continuer = 1
     while continuer:
-        print('infi')
         continuer = int(input())
+card_numbers_tot = []
+for i in range(6):
 
-ourbooster = generateBooster()
+    ourbooster = generateBooster()
+    card_numbers_booster = [card.number for card in ourbooster]
+    card_numbers_tot += card_numbers_booster
+print(card_numbers_tot)
 print("booster generated")
-ourbooster = []
-ourbooster.append(MtgSet[57])
-#transfo_url_to_image(ourbooster)
-print('images generated')
 #for card in ourbooster:
 #    print(card.name, "rarity : ", card.rarity, 'image : ', card.image_url, 'type : ', card.type)
-placement_images([202])
+placement_images(card_numbers_tot)
